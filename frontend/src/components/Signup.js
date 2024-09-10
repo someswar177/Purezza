@@ -8,7 +8,7 @@ const Signup = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const apiUrl = 'http://localhost:8000';
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
   const handleSignup = async (e) => {
     e.preventDefault();

@@ -4,7 +4,7 @@ import Cookies from 'universal-cookie';
 
 const AdminPanel = () => {
   const [complaints, setComplaints] = useState([]);
-  const apiUrl = 'http://localhost:8000';
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
   const cookies = new Cookies();
   const token = cookies.get("TOKEN");
 
