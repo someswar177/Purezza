@@ -44,12 +44,14 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
 
-  const login = async (email, password) => {
+  const login = async (email, password, isAdmin) => {
     try {
       const response = await axios.post(`${apiUrl}/login`, {
         email,
         password,
+        isAdmin
       });
+      console.log(response)
       cookies.set('TOKEN', response.data.token, {
         path: '/',
       });

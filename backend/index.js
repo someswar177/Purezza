@@ -48,38 +48,40 @@ app.post("/signup",async (req,res)=>{
     }
 })
 
-app.post('/login',async (req,res)=>{
-    const {email,password} = req.body;
-    const user = await User.findOne({email:email})
-    if(!user){
-        return(
-            res.status(500).send({
-                message:"email not found"
-            })
-        )
+app.post('/login', async (req, res) => {
+    const { email, password, isAdmin } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).send({ message: "Email not found" });
+        }
+        if (typeof isAdmin !== 'undefined' && user.isAdmin !== isAdmin) {
+            return res.status(403).send({ message: "Incorrect User Role" });
+        }
+        const passCheck = await bcrypt.compare(password, user.password);
+        if (!passCheck) {
+            return res.status(401).send({ message: "Incorrect password" });
+        }
+
+        const token = jwt.sign(
+            { userId: user._id, userEmail: user.email },
+            "TOKEN", 
+            { expiresIn: "24h" }
+        );
+
+        console.log(`token : ${token}`);
+        res.status(200).send({
+            message: "Login successful",
+            email: user.email,
+            token
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).send({ message: "Server error" });
     }
-    const passCheck = await bcrypt.compare(password,user.password);
-    if(!passCheck){
-        return(
-            res.status(500).send({
-                message:"Incorrect password"
-            }
-            )
-        )
-    }
-    const token = jwt.sign({
-        userId:user._id,
-        userEmail:user.email
-    },"TOKEN",
-    {expiresIn:"24h"}
-    )
-    console.log(`token : ${token}`)
-    res.status(200).send({
-        message:"login successfully",
-        email:user.email,
-        token
-    })
 });
+
 
 app.get('/getuser',auth,async (req,res)=>{
     const user = await User.findOne({_id:req.user.userId})
@@ -124,4 +126,15 @@ app.get('/getcomplaints',async (req,res)=>{
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-})
+});
+
+app.get('/getUsercomplaints',auth,async (req,res)=>{
+    try {
+        const userId = req.user.userId;
+        const complaints = await Complaint.find({ user: userId }).populate('user', 'email');
+        console.log(complaints);
+        res.json(complaints);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
